@@ -25,3 +25,97 @@ class Mesero(Empleado):
     
     def obtener_datos(self):
         return f"{self.nombres} {self.apellidos} (DNI {self.dni})"
+
+class Producto:
+    def __init__(self, id_producto, nombre, precio, stock, categoria):
+        self.id_producto = id_producto
+        self.nombre = nombre
+        self.precio = precio
+        self.stock = stock
+        self.categoria = categoria
+ 
+    def esta_disponible(self, cantidad):
+        return self.stock >= cantidad
+ 
+    def actualizar_stock(self, cantidad):
+        if self.stock + cantidad < 0:
+            return False
+        self.stock += cantidad
+        return True
+ 
+ 
+class DetallePedido:
+    def __init__(self, producto, cantidad):
+        self.producto = producto
+        self.cantidad = cantidad
+        self.precio_unitario = producto.precio    
+ 
+    def calcular_subtotal(self):
+        return self.cantidad * self.precio_unitario
+ 
+ 
+class Pedido:
+    def __init__(self, id_pedido):
+        self.id_pedido = id_pedido
+        self.estado = "ABIERTO"
+        self.fecha_hora = datetime.now().strftime("%Y-%m-%d %H:%M")
+        self.detalles = []                        
+ 
+    def agregar_detalle(self, producto, cantidad):
+        if not producto.esta_disponible(cantidad):
+            raise ValueError(f"Stock insuficiente de {producto.nombre} (hay {producto.stock})")
+        producto.actualizar_stock(-cantidad)      
+        for d in self.detalles:
+            if d.producto is producto:
+                d.cantidad += cantidad
+                return
+        self.detalles.append(DetallePedido(producto, cantidad))
+ 
+    def calcular_total(self):
+        return sum(d.calcular_subtotal() for d in self.detalles)
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
