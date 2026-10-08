@@ -3,3 +3,4 @@ Integrantes
 
 Ricardo Alcantara Lamonja
 Jesus Silva Pineda
+Manuel Samanez Rodriguez
