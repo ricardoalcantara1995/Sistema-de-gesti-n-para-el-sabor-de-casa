@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from controlador import Restaurante
  
 gestor = Restaurante("Mi Restaurante", cantidad_mesas=10)
-# datos de prueba
+
 gestor.registrar_mesero("Ana", "Pérez", "12345678", "999111222", "Mañana")
 gestor.registrar_producto("Ceviche", 28.0, 20, "Platos")
 gestor.registrar_producto("Chicha morada", 8.0, 30, "Bebidas")
@@ -30,7 +30,7 @@ def tabla(parent, columnas, alto=8):
     return t
  
  
-# ================= PESTAÑA MESEROS =================
+
 f_mes = ttk.Frame(nb, padding=10)
 nb.add(f_mes, text="Meseros")
 e_nom, e_ape, e_dni, e_tel, e_turno = (campo(f_mes, t, i) for i, t in
@@ -57,7 +57,7 @@ def guardar_mesero():
  
 ttk.Button(f_mes, text="Crear mesero", command=guardar_mesero).grid(row=5, column=1, pady=6, sticky="w")
  
-# ================= PESTAÑA PRODUCTOS =================
+
 f_pro = ttk.Frame(nb, padding=10)
 nb.add(f_pro, text="Productos")
 p_nom, p_pre, p_sto, p_cat = (campo(f_pro, t, i) for i, t in
@@ -85,7 +85,7 @@ def guardar_producto():
  
 ttk.Button(f_pro, text="Crear producto", command=guardar_producto).grid(row=4, column=1, pady=6, sticky="w")
  
-# ================= PESTAÑA MESAS / PEDIDO / PAGO =================
+
 f_ped = ttk.Frame(nb, padding=10)
 nb.add(f_ped, text="Mesas y pedido")
  
@@ -196,7 +196,7 @@ def cobrar():
  
 ttk.Button(pago, text="Cobrar", command=cobrar).grid(row=0, column=5, padx=10)
  
-# ================= PESTAÑA RESUMEN =================
+
 f_res = ttk.Frame(nb, padding=10)
 nb.add(f_res, text="Consumo de mesas / Caja")
 t_mesas = tabla(f_res, ("Mesa", "Estado", "Mesero", "Consumo"), alto=12)
