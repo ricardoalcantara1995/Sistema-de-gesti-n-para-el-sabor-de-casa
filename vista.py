@@ -118,4 +118,107 @@ def mesa_sel():
         return None
     return int(cb_mesa.get())
  
+def refrescar_pedido(*_):
+    t_det.delete(*t_det.get_children())
+    n = cb_mesa.get()
+    if not n:
+        return
+    mesa = gestor.buscar_mesa(int(n))
+    lbl_estado.config(text=f"Estado: {mesa.estado}")
+    pedido = gestor.consultar_consumo_mesa(int(n))
+    if pedido:
+        for d in pedido.detalles:
+            t_det.insert("", "end", values=(d.producto.nombre, d.cantidad,
+                         f"{d.precio_unitario:.2f}", f"{d.calcular_subtotal():.2f}"))
+        lbl_total.config(text=f"Total: S/ {pedido.calcular_total():.2f}")
+    else:
+        lbl_total.config(text="Total: S/ 0.00")
  
+ 
+def agregar():
+    n = mesa_sel()
+    if n is None or not cb_prod.get():
+        return
+    mesa = gestor.buscar_mesa(n)
+    if mesa.pedido is None:                               # tomar pedido = abrir la cuenta de la mesa
+        if not cb_mesero.get():
+            return messagebox.showwarning("Mesero", "Elige el mesero que atiende")
+        id_m = int(cb_mesero.get().split(" - ")[0])
+        mesero = next(m for m in gestor.listar_meseros() if m.id_empleado == id_m)
+        gestor.tomar_pedido(n, mesero)
+    id_p = int(cb_prod.get().split(" - ")[0])
+    prod = next(p for p in gestor.listar_productos() if p.id_producto == id_p)
+    try:
+        gestor.agregar_consumo(n, prod, int(sp_cant.get()))
+    except ValueError as err:
+        return messagebox.showerror("No se pudo agregar", str(err))
+    refrescar_pedido()
+    refrescar_productos()                                  # el stock bajó
+ 
+ 
+ttk.Button(f_ped, text="Agregar al pedido", command=agregar).grid(row=1, column=5, padx=6)
+cb_mesa.bind("<<ComboboxSelected>>", refrescar_pedido)
+ 
+# --- pago ---
+pago = ttk.LabelFrame(f_ped, text="Cobrar", padding=8)
+pago.grid(row=4, column=0, columnspan=6, sticky="we", pady=8)
+ttk.Label(pago, text="Método").grid(row=0, column=0)
+cb_metodo = ttk.Combobox(pago, values=["EFECTIVO", "YAPE", "PLIN"], width=10, state="readonly")
+cb_metodo.set("EFECTIVO")
+cb_metodo.grid(row=0, column=1, padx=6)
+ttk.Label(pago, text="Monto entregado").grid(row=0, column=2)
+e_monto = ttk.Entry(pago, width=10)
+e_monto.grid(row=0, column=3, padx=6)
+var_conf = tk.BooleanVar()
+ttk.Checkbutton(pago, text="Mesero confirma Yape/Plin", variable=var_conf).grid(row=0, column=4, padx=6)
+ 
+ 
+def cobrar():
+    n = mesa_sel()
+    if n is None or gestor.consultar_consumo_mesa(n) is None:
+        return messagebox.showwarning("Cobrar", "La mesa no tiene pedido")
+    try:
+        monto = float(e_monto.get() or 0)
+    except ValueError:
+        return messagebox.showwarning("Monto", "Monto inválido")
+    venta, ok = gestor.registrar_venta(n, cb_metodo.get(), monto, var_conf.get())
+    if not ok:
+        return messagebox.showwarning("Pago no válido",
+            "Monto insuficiente" if venta.metodo_pago == "EFECTIVO" else "Falta confirmar el pago digital")
+    msg = f"Venta #{venta.id_venta} cobrada: S/ {venta.monto_total:.2f}"
+    if venta.metodo_pago == "EFECTIVO":
+        msg += f"\nVuelto: S/ {venta.vuelto:.2f}"
+    messagebox.showinfo("Cobrado", msg)
+    e_monto.delete(0, "end")
+    var_conf.set(False)
+    refrescar_pedido()
+ 
+ 
+ttk.Button(pago, text="Cobrar", command=cobrar).grid(row=0, column=5, padx=10)
+ 
+# ================= PESTAÑA RESUMEN =================
+f_res = ttk.Frame(nb, padding=10)
+nb.add(f_res, text="Consumo de mesas / Caja")
+t_mesas = tabla(f_res, ("Mesa", "Estado", "Mesero", "Consumo"), alto=12)
+t_mesas.pack(fill="x")
+lbl_caja = ttk.Label(f_res, text="", justify="left")
+lbl_caja.pack(anchor="w", pady=10)
+ 
+ 
+def refrescar_resumen(*_):
+    t_mesas.delete(*t_mesas.get_children())
+    for m in gestor.mesas:
+        total = m.pedido.calcular_total() if m.pedido else 0
+        t_mesas.insert("", "end", values=(m.numero_mesa, m.estado,
+                       m.mesero.nombres if m.mesero else "-", f"S/ {total:.2f}"))
+    c = gestor.generar_cuadre_caja()
+    top = gestor.obtener_plato_mas_vendido()
+    lbl_caja.config(text=(f"Efectivo: S/ {c['EFECTIVO']:.2f}   Yape: S/ {c['YAPE']:.2f}   "
+                          f"Plin: S/ {c['PLIN']:.2f}\nTOTAL: S/ {c['TOTAL']:.2f}\n"
+                          f"Plato más vendido: {top.nombre if top else '-'}"))
+ 
+ 
+nb.bind("<<NotebookTabChanged>>", refrescar_resumen)
+refrescar_meseros()
+refrescar_productos()
+root.mainloop()
