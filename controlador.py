@@ -38,3 +38,41 @@ class Restaurante:
             mesa.asignar_pedido(Pedido(self._sig_pedido))
             self._sig_pedido += 1
         return mesa.pedido
+
+    def agregar_consumo(self, numero_mesa, producto, cantidad):
+        mesa = self.buscar_mesa(numero_mesa)
+        if mesa.pedido is None:
+            raise ValueError("La mesa no tiene pedido abierto")
+        mesa.pedido.agregar_detalle(producto, cantidad)
+ 
+    def consultar_consumo_mesa(self, numero_mesa):
+        return self.buscar_mesa(numero_mesa).pedido
+ 
+    def registrar_venta(self, numero_mesa, metodo_pago, monto_entregado=0.0, confirmado=False):
+        mesa = self.buscar_mesa(numero_mesa)
+        if mesa.pedido is None:
+            raise ValueError("La mesa no tiene pedido")
+        venta = Venta(self._sig_venta, mesa.pedido, metodo_pago)
+        venta.monto_entregado = monto_entregado
+        venta.pago_confirmado = confirmado and metodo_pago != "EFECTIVO"
+        if not venta.procesar_pago():
+            return venta, False
+        self._sig_venta += 1
+        mesa.pedido.estado = "PAGADO"
+        self.ventas.append(venta)
+        mesa.liberar_mesa()
+        return venta, True
+ 
+    def obtener_plato_mas_vendido(self):
+        conteo = {}
+        for v in self.ventas:
+            for d in v.pedido.detalles:
+                conteo[d.producto] = conteo.get(d.producto, 0) + d.cantidad
+        return max(conteo, key=conteo.get) if conteo else None
+ 
+    def generar_cuadre_caja(self):
+        cuadre = {"EFECTIVO": 0.0, "YAPE": 0.0, "PLIN": 0.0}
+        for v in self.ventas:
+            cuadre[v.metodo_pago] += v.monto_total
+        cuadre["TOTAL"] = sum(cuadre.values())
+        return cuadre
