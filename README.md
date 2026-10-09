@@ -2,7 +2,6 @@
 Integrantes
 
 * Ricardo Alcantara Lamonja
-* 
+* Manuel Alejandro Samanez Rodriguez
 * Jesus Silva Pineda
-* Manuel Samanez Rodriguez
 * Tania Untama Llanos
