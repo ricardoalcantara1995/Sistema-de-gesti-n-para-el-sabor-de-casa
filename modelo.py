@@ -74,7 +74,25 @@ class Pedido:
     def calcular_total(self):
         return sum(d.calcular_subtotal() for d in self.detalles)
  
-
+class Mesa:
+    def __init__(self, numero_mesa, capacidad):
+        self.numero_mesa = numero_mesa
+        self.capacidad = capacidad
+        self.estado = "LIBRE"
+        self.mesero = None
+        self.pedido = None
+ 
+    def asignar_mesero(self, mesero):
+        self.mesero = mesero
+ 
+    def asignar_pedido(self, pedido):
+        self.pedido = pedido
+        self.estado = "OCUPADA"
+ 
+    def liberar_mesa(self):
+        self.pedido = None
+        self.mesero = None
+        self.estado = "LIBRE"
 
 
 
