@@ -94,7 +94,28 @@ class Mesa:
         self.mesero = None
         self.estado = "LIBRE"
 
-
+class Venta:
+    def __init__(self, id_venta, pedido, metodo_pago):
+        self.id_venta = id_venta
+        self.pedido = pedido
+        self.metodo_pago = metodo_pago           # EFECTIVO / YAPE / PLIN
+        self.monto_total = pedido.calcular_total()
+        self.monto_entregado = 0.0
+        self.vuelto = 0.0
+        self.pago_confirmado = False
+        self.fecha = datetime.now().strftime("%Y-%m-%d %H:%M")
+ 
+    def calcular_vuelto(self):
+        return round(self.monto_entregado - self.monto_total, 2)
+ 
+    def procesar_pago(self):
+        if self.metodo_pago == "EFECTIVO":
+            if self.monto_entregado < self.monto_total:
+                return False
+            self.vuelto = self.calcular_vuelto()
+            self.pago_confirmado = True
+            return True
+        return self.pago_confirmado
 
 
 
